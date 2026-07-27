@@ -41,15 +41,10 @@ def _extractable(folder: str, name: str) -> bool:
     return folder == "assetbundles" or name.endswith(_EXTRACTABLE_RES)
 
 
-def _required_size(folder: str, name: str) -> int:
-    return sum(e.size for e in _catalog.required(name, folder))
-
-
 def _row(folder: str, name: str, entry: Entry) -> tuple[str, str, str]:
     extra = f"<i>({_filesize(entry.size)})</i>"
     if _extractable(folder, name):
-        n = _filesize(_required_size(folder, name))
-        extra += f' <a href="{quote(name)}?extract">extracted.zip</a> <i>({n})</i>'
+        extra += f' <a href="{quote(name)}?extract=1">extracted.zip</a>'
     return (name, quote(name), extra)
 
 
@@ -99,7 +94,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         u = urlsplit(self.path)
         parts = [p for p in unquote(u.path).split("/") if p]
-        want_extract = "extract" in parse_qs(u.query)
+        want_extract = "extract" in parse_qs(u.query, keep_blank_values=True)
         if not parts:
             self._send_html(
                 _page(
