@@ -14,13 +14,13 @@ def main() -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser(
-        "decrypt", help="decrypt a directory of assets (files named by asset name)"
+        "decrypt", help="decrypt a file or directory of assets (named by asset name)"
     )
     p.add_argument("indir")
     p.add_argument("outdir")
 
     p = sub.add_parser(
-        "encrypt", help="encrypt a directory of assets (files named by asset name)"
+        "encrypt", help="encrypt a file or directory of assets (named by asset name)"
     )
     p.add_argument("indir")
     p.add_argument("outdir")
@@ -42,7 +42,7 @@ def main() -> int:
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--port", type=int, default=8000)
 
-    p = sub.add_parser("extract", help="extract decrypted assetbundles with UnityPy")
+    p = sub.add_parser("extract", help="extract a decrypted asset file or directory")
     p.add_argument("indir")
     p.add_argument("outdir")
 

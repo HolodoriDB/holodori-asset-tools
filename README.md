@@ -31,7 +31,10 @@ Assets live under two flat groups, `assetbundles/` and `resources/`. `download` 
 decrypt on the fly. `decrypt`/`encrypt` operate on local files and key the header
 mask on each file's name, so files must be named by their asset name.
 
-`extract` extracts a given directory of assets. The following file types are extracted:
+`decrypt`, `encrypt` and `extract` accept either a single file or a directory as
+their input.
+
+`extract` extracts a given file or directory of assets. The following file types are extracted:
 - Assetbundles (files inside are extracted)
 - ACB/AWB files
 - USM files (*extracted as .ivf files, convert to mp4/mov with a converter like ffmpeg or online converter*)
@@ -41,7 +44,7 @@ Octo keys and app versions are fetched from our repository [here](https://github
 The library is usable directly:
 
 ```python
-from holodori_asset_downloader import catalog, crypto
+from holodori_asset_tools import catalog, crypto
 
 cat = catalog.get("octo_list.json")
 entry = cat.assetBundles[0]
