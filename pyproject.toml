@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "holodori-asset-tools"
+version = "1.0.0"
+description = "Decrypt, encrypt, download and serve holodori (hololive Dreams) game assets"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["httpx[http2]", "cryptography", "tqdm", "UnityPy", "Pillow", "cricodecs"]
+
+[project.scripts]
+holodori = "holodori_asset_tools.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["holodori_asset_tools*"]

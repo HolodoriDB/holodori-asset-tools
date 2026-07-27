@@ -1,2 +1,49 @@
-# holodori-asset-downloader
-Download and view assets from hololive Dreams
+# holodori-asset-tools
+
+Decrypt, encrypt, download and extract holodori (hololive Dreams) game assets.
+
+Inspired by [sssekai](https://github.com/mos9527/sssekai)
+
+## Install
+
+Download this repository, then run the command
+
+```
+pip install -e .
+```
+
+## Usage
+
+The command is `holodori`.
+
+```
+holodori download ./assets [--filter REGEX] [--catalog octo_list.json]
+holodori serve [--host 127.0.0.1] [--port 8000]
+holodori decrypt ./in ./out
+holodori encrypt ./in ./out [--kind bundle|resource]
+holodori extract ./assets ./extracted
+```
+
+"Serving" the assets allows you to browse in browser the list of assets, and download any one you want.
+
+Assets live under two flat groups, `assetbundles/` and `resources/`. `download` and
+`serve` pull the octo catalog (caching it to `--catalog`), fetch from the CDN and
+decrypt on the fly. `decrypt`/`encrypt` operate on local files and key the header
+mask on each file's name, so files must be named by their asset name.
+
+`extract` extracts a given directory of assets. The following file types are extracted:
+- Assetbundles (files inside are extracted)
+- ACB/AWB files
+- USM files (*extracted as .ivf files, convert to mp4/mov with a converter like ffmpeg or online converter*)
+
+Octo keys and app versions are fetched from our repository [here](https://github.com/HolodoriDB/holodori-app-protos/tree/main).
+
+The library is usable directly:
+
+```python
+from holodori_asset_downloader import catalog, crypto
+
+cat = catalog.get("octo_list.json")
+entry = cat.assetBundles[0]
+raw = crypto.decrypt(open("SEvWEA", "rb").read(), entry.name)
+```
