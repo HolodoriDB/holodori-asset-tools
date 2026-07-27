@@ -16,6 +16,8 @@ pip install -e .
 
 The command is `holodori`.
 
+Single files are always accepted (decrypt, encrypt, and extract)
+
 ```
 holodori download ./assets [--filter REGEX] [--catalog octo_list.json]
 holodori serve [--host 127.0.0.1] [--port 8000]
@@ -36,7 +38,7 @@ their input.
 
 `extract` extracts a given file or directory of assets. The following file types are extracted:
 - Assetbundles (files inside are extracted)
-- ACB/AWB files
+- ACB/AWB files (**note: some ACB files rely on a separate AWB file - to extract those both files need to be downloaded**)
 - USM files (*extracted as .ivf files, convert to mp4/mov with a converter like ffmpeg or online converter*)
 
 Octo keys and app versions are fetched from our repository [here](https://github.com/HolodoriDB/holodori-app-protos/tree/main).
