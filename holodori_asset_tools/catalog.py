@@ -41,6 +41,8 @@ class Entry:
     url: str
     md5: str = ""
     size: int = 0
+    dependencies: list[int] = field(default_factory=list)
+    id: int = 0
 
 
 @dataclass
@@ -60,7 +62,13 @@ class Catalog:
     def load(cls, path: Union[str, Path]) -> "Catalog":
         obj = json.loads(Path(path).read_text(encoding="utf-8"))
         pick = lambda e: Entry(
-            e["name"], e["objectName"], e["url"], e.get("md5", ""), e.get("size", 0)
+            e["name"],
+            e["objectName"],
+            e["url"],
+            e.get("md5", ""),
+            e.get("size", 0),
+            e.get("dependencies", []),
+            e.get("id", 0),
         )
         return cls(
             obj.get("revisionId", 0),
@@ -69,6 +77,63 @@ class Catalog:
             [pick(e) for e in obj.get("assetBundles", [])],
             [pick(e) for e in obj.get("resources", [])],
         )
+
+    def _bundle_index(self) -> dict[str, int]:
+        cache = getattr(self, "_bidx", None)
+        if cache is None:
+            cache = {e.name: i for i, e in enumerate(self.assetBundles)}
+            self._bidx = cache
+        return cache
+
+    def _resource_index(self) -> dict[str, "Entry"]:
+        cache = getattr(self, "_ridx", None)
+        if cache is None:
+            cache = {e.name: e for e in self.resources}
+            self._ridx = cache
+        return cache
+
+    def _by_id(self) -> dict[int, "Entry"]:
+        cache = getattr(self, "_idmap", None)
+        if cache is None:
+            cache = {e.id: e for e in self.assetBundles}
+            cache.update({e.id: e for e in self.resources})
+            self._idmap = cache
+        return cache
+
+    def required(self, name: str, group: str) -> list["Entry"]:
+        if group == "assetbundles":
+            idx = self._bundle_index()
+            if name not in idx:
+                return []
+            start = self.assetBundles[idx[name]]
+            byid = self._by_id()
+            seen: set[int] = set()
+            order: list["Entry"] = []
+            stack = [start]
+            while stack:
+                e = stack.pop()
+                if e.id in seen:
+                    continue
+                seen.add(e.id)
+                order.append(e)
+                for d in e.dependencies:
+                    dep = byid.get(d)
+                    if dep is not None and dep.id not in seen:
+                        stack.append(dep)
+            return [start] + sorted(
+                (e for e in order if e is not start), key=lambda x: x.name
+            )
+        res = self._resource_index()
+        entry = res.get(name)
+        if entry is None:
+            return []
+        req = [entry]
+        if name.endswith((".acb", ".awb")):
+            stem = name.rsplit(".", 1)[0]
+            sib = stem + (".awb" if name.endswith(".acb") else ".acb")
+            if sib in res:
+                req.append(res[sib])
+        return req
 
 
 def _uvarint(b: bytes, i: int) -> tuple[int, int]:
@@ -114,12 +179,16 @@ def _packed(v: bytes) -> list[int]:
 def _parse_entry(buf: bytes) -> dict:
     e: dict = {}
     for f, wt, v in _fields(buf):
-        if f == 2:
+        if f == 1:
+            e["id"] = v
+        elif f == 2:
             e["name"] = v.decode()
         elif f == 3:
             e["size"] = v
         elif f == 5:
             e["md5"] = v.decode()
+        elif f == 6:
+            e["dependencies"] = _packed(v)
         elif f == 7:
             e["objectName"] = v.decode()
     return e
@@ -174,6 +243,8 @@ def fetch(gen: int = 0, url: Optional[str] = None) -> Catalog:
             fmt.replace("{o}", e.get("objectName", "")),
             e.get("md5", ""),
             e.get("size", 0),
+            e.get("dependencies", []),
+            e.get("id", 0),
         )
         for e in lst
     ]

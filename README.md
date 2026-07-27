@@ -27,6 +27,11 @@ holodori extract ./assets ./extracted
 ```
 
 "Serving" the assets allows you to browse in browser the list of assets, and download any one you want.
+Each assetbundle and each ACB/AWB/USM resource also gets an `extracted.zip` link that downloads the
+asset plus every bundle it requires (per the octo dependency list), extracts them, and returns the
+result as `extracted_{name}.zip`. The size shown next to the link is the total download it needs.
+
+**We recommend using `holodori serve` for beginners! It lets you browse and download extracted assets.**
 
 Assets live under two flat groups, `assetbundles/` and `resources/`. `download` and
 `serve` pull the octo catalog (caching it to `--catalog`), fetch from the CDN and
