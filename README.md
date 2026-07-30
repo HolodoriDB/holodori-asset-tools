@@ -4,6 +4,8 @@ Decrypt, encrypt, download and extract holodori (hololive Dreams) game assets.
 
 Inspired by [sssekai](https://github.com/mos9527/sssekai)
 
+**We recommend using `holodori serve` for beginners! It lets you browse and download extracted assets.**
+
 ## Install
 
 Download this repository, then run the command
@@ -31,8 +33,6 @@ Each assetbundle and each ACB/AWB/USM resource also gets an `extracted.zip` link
 asset plus every bundle it requires (per the octo dependency list), extracts them, and returns the
 result as `extracted_{name}.zip`. The size shown next to the link is the total download it needs.
 
-**We recommend using `holodori serve` for beginners! It lets you browse and download extracted assets.**
-
 Assets live under two flat groups, `assetbundles/` and `resources/`. `download` and
 `serve` pull the octo catalog (caching it to `--catalog`), fetch from the CDN and
 decrypt on the fly. `decrypt`/`encrypt` operate on local files and key the header
@@ -44,7 +44,7 @@ their input.
 `extract` extracts a given file or directory of assets. The following file types are extracted:
 - Assetbundles (files inside are extracted)
 - ACB/AWB files (**note: some ACB files rely on a separate AWB file - to extract those both files need to be downloaded**)
-- USM files (*extracted as .ivf files, convert to mp4/mov with a converter like ffmpeg or online converter*)
+- USM files (*extracted as .ivf files, convert to mp4/mov with a converter like ffmpeg or online converter - TODO convert*)
 
 Octo keys and app versions are fetched from our repository [here](https://github.com/HolodoriDB/holodori-app-protos/tree/main).
 
