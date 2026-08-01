@@ -1,5 +1,7 @@
 # holodori-asset-tools
 
+**DOES NOT REQUIRE THE GAME INSTALLED ON PC!!! NO EXTRA SETUP IS REQUIRED.**
+
 Decrypt, encrypt, download and extract holodori (hololive Dreams) game assets.
 
 Inspired by [sssekai](https://github.com/mos9527/sssekai)
