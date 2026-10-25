@@ -10,10 +10,8 @@ Inspired by [sssekai](https://github.com/mos9527/sssekai)
 
 ## Install
 
-Download this repository, then run the command
-
 ```
-pip install -e .
+pip install holodori-asset-tools
 ```
 
 ## Usage
