@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import argparse
 import re
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from logging import getLogger
 from pathlib import Path
 
-import httpx
+from curl_cffi import requests
 from tqdm import tqdm
 
 from .. import catalog, crypto
@@ -40,14 +41,21 @@ def main(args: argparse.Namespace) -> int:
             jobs.append((dest, entry))
 
     logger.info("downloading %d files to %s", len(jobs), outdir)
-    client = httpx.Client(http2=True, timeout=120, follow_redirects=True)
+    # curl_cffi sessions aren't thread-safe, so give each worker thread its own
+    _local = threading.local()
+
+    def _session() -> requests.Session:
+        s = getattr(_local, "s", None)
+        if s is None:
+            s = _local.s = requests.Session(impersonate="chrome", timeout=120)
+        return s
 
     def download(job: tuple[Path, Entry]) -> None:
         dest, entry = job
         last: Exception | None = None
         for _ in range(3):
             try:
-                r = client.get(entry.url)
+                r = _session().get(entry.url)
                 r.raise_for_status()
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 dest.write_bytes(crypto.decrypt(r.content, entry.name))

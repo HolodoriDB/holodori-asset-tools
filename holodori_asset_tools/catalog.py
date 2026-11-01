@@ -8,7 +8,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import Optional, Union
 
-import httpx
+from curl_cffi import requests
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 logger = getLogger("catalog")
@@ -43,7 +43,7 @@ def appver(url: str = APPVER_URL) -> dict:
     best: Optional[dict] = None
     for u in urls:
         try:
-            info = httpx.get(u, timeout=30).json()
+            info = requests.get(u, timeout=30, impersonate="chrome").json()
         except Exception as e:
             logger.warning("appver fetch failed (%s): %s", u, e)
             continue
@@ -256,7 +256,7 @@ def fetch(gen: int = 0, url: Optional[str] = None) -> Catalog:
     api_key = info.get("android_octo_key", OCTO_API_KEY)
     client_key = info.get("android_app_octo_key", OCTO_CLIENT_KEY)
     logger.info("app version %s", info.get("version_name") or "?")
-    with httpx.Client(http2=True, timeout=120) as c:
+    with requests.Session(impersonate="chrome", timeout=120) as c:
         r = c.get(
             (url or OCTO_LIST_URL).format(gen=gen),
             headers={"X-OCTO-KEY": api_key, "X-APP-OCTO-KEY": client_key},

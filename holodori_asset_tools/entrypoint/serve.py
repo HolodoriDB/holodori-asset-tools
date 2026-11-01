@@ -5,13 +5,14 @@ import html
 import io
 import shutil
 import tempfile
+import threading
 import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from logging import getLogger
 from pathlib import Path
 from urllib.parse import parse_qs, quote, unquote, urlsplit
 
-import httpx
+from curl_cffi import requests
 
 from .. import catalog, crypto
 from ..catalog import Catalog, Entry
@@ -20,8 +21,17 @@ from .extract import _extract_one
 logger = getLogger("serve")
 
 _index: dict[str, dict[str, Entry]] = {}
-_client: httpx.Client
 _catalog: Catalog
+_local = threading.local()
+
+
+def _session() -> requests.Session:
+    # curl_cffi sessions aren't thread-safe; ThreadingHTTPServer serves each request on its own
+    # thread, so hand each thread its own session
+    s = getattr(_local, "s", None)
+    if s is None:
+        s = _local.s = requests.Session(impersonate="chrome", timeout=120)
+    return s
 
 _EXTRACTABLE_RES = (".acb", ".awb", ".usm")
 
@@ -71,7 +81,7 @@ def _build_zip(folder: str, name: str) -> bytes:
         for e in req:
             dst = staged / e.name
             dst.parent.mkdir(parents=True, exist_ok=True)
-            dst.write_bytes(crypto.decrypt(_client.get(e.url).content, e.name))
+            dst.write_bytes(crypto.decrypt(_session().get(e.url).content, e.name))
         for e in req:
             try:
                 _extract_one(staged / e.name, out)
@@ -125,7 +135,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _send_file(self, entry: Entry) -> None:
         try:
-            body = crypto.decrypt(_client.get(entry.url).content, entry.name)
+            body = crypto.decrypt(_session().get(entry.url).content, entry.name)
         except Exception as e:
             self.send_error(502, str(e))
             return
@@ -153,13 +163,12 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main(args: argparse.Namespace) -> int:
-    global _index, _client, _catalog
+    global _index, _catalog
     _catalog = catalog.get(args.catalog, args.gen)
     _index = {
         "assetbundles": {e.name: e for e in _catalog.assetBundles},
         "resources": {e.name: e for e in _catalog.resources},
     }
-    _client = httpx.Client(http2=True, timeout=120, follow_redirects=True)
     logger.info(
         "revision %d: %d bundles, %d resources",
         _catalog.revisionId,
