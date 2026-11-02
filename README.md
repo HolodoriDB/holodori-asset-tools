@@ -8,13 +8,18 @@ Inspired by [sssekai](https://github.com/mos9527/sssekai)
 
 **We recommend using `holodori serve` for beginners! It lets you browse and download extracted assets.**
 
+## Game Data Source
+Octo keys and app versions are fetched from our repository [here](https://github.com/HolodoriDB/holodori-app-protos/tree/main). When the game updates, usually it can take a few minutes up to a few hours to automatically extract the game details. In rare cases, updates can break this process; in which case an update will be pushed ASAP to the `holodori-app-protos` repository (but can take a while).
+
+Sometimes (hasn't happened yet) this may be a breaking change that requires a `holodori-asset-tools` library update.
+
 ## Install
 
 ```
 pip install holodori-asset-tools
 ```
 
-## Usage
+## CLI Usage
 
 The command is `holodori`.
 
@@ -28,26 +33,18 @@ holodori encrypt ./in ./out [--kind bundle|resource]
 holodori extract ./assets ./extracted
 ```
 
-"Serving" the assets allows you to browse in browser the list of assets, and download any one you want.
-Each assetbundle and each ACB/AWB/USM resource also gets an `extracted.zip` link that downloads the
-asset plus every bundle it requires (per the octo dependency list), extracts them, and returns the
-result as `extracted_{name}.zip`. The size shown next to the link is the total download it needs.
+"Serving" the assets allows you to browse in browser the list of assets, and download any one you want. You can also download assetbundle-type files as extracted zips!
 
-Assets live under two flat groups, `assetbundles/` and `resources/`. `download` and
-`serve` pull the octo catalog (caching it to `--catalog`), fetch from the CDN and
-decrypt on the fly. `decrypt`/`encrypt` operate on local files and key the header
-mask on each file's name, so files must be named by their asset name.
+Assets for this game are under two groups without any nesting; `assetbundles/` and `resources/`. The library's `download` and `serve` commands automatically fetch the octo catalog (use `--catalog` to change location).
 
-`decrypt`, `encrypt` and `extract` accept either a single file or a directory as
-their input.
+The `decrypt`/`encrypt` require the asset's file name, so files must be named by their asset name!
 
 `extract` extracts a given file or directory of assets. The following file types are extracted:
 - Assetbundles (files inside are extracted)
 - ACB/AWB files (**note: some ACB files rely on a separate AWB file - to extract those both files need to be downloaded**)
 - USM files (*extracted as .ivf files, convert to mp4/mov with a converter like ffmpeg or online converter - TODO convert*)
 
-Octo keys and app versions are fetched from our repository [here](https://github.com/HolodoriDB/holodori-app-protos/tree/main).
-
+## Programmatic Usage
 The library is usable directly:
 
 ```python

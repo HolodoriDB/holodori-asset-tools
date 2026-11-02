@@ -54,7 +54,7 @@ def encrypt(plaintext: bytes) -> bytes:
 
 
 def decrypt(envelope: bytes) -> bytes:
-    nlen = int.from_bytes(envelope[1:4], "big")
+    nlen = envelope[0] - 2
     nonce, ct = envelope[4 : 4 + nlen], envelope[4 + nlen :]
     iv = hashlib.md5(API_SECRET + nonce).digest()
     pt = Cipher(algorithms.AES(_KEY), modes.CBC(iv)).decryptor().update(ct)
@@ -81,4 +81,7 @@ def decode_response(body: bytes) -> bytes:
     msg = body[5 : 5 + int.from_bytes(body[1:5], "big")]
     if body[0] & 1:
         msg = gzip.decompress(msg)
-    return decrypt(msg)
+    pt = decrypt(msg)
+    if pt[:2] == b"\x1f\x8b":
+        pt = gzip.decompress(pt)
+    return pt
